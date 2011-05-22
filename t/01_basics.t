@@ -39,10 +39,10 @@ lives_ok(
 lives_ok(
     sub {
         replace_pod({
-            filename    => \$content,
-            tag         => '=head1 USAGE',
-            usage       => $usage->text(),
-            indent      => 4,
+            filename   => \$content,
+            tag        => '=head1 USAGE',
+            code_block => $usage->text(),
+            indent     => 4,
         });
     },
     'replace_pod',

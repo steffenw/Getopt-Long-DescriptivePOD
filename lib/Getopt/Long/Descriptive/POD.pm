@@ -15,14 +15,23 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     my %param_of = validate(
         @_,
         {
-            filename => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME },
-            encoding => { type => SCALAR, optional => 1 },
-            tag      => { regex => qr{ \A = \w }xms },
-            usage    => { type => SCALAR },
-            indent   => { regex => qr{ \A \d+ \z }xms, default => 1 },
-            on_fail  => { type => CODEREF, default => sub {confess @_} },
+            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME },
+            encoding          => { type => SCALAR, optional => 1 },
+            tag               => { regex => qr{ \A = \w }xms },
+            before_code_block => { type => SCALAR, optional => 1 },
+            code_block        => { type => SCALAR, optional => 1 },
+            after_code_block  => { type => SCALAR, optional => 1 },
+            indent            => { regex => qr{ \A \d+ \z }xms, default => 1 },
+            on_fail           => { type => CODEREF, default => sub {confess @_} },
         },
     );
+
+    BLOCK: for my $block ( qw(before_code_block after_code_block) ) {
+        defined $param_of{block}
+            or next BLOCK;
+        $param_of{block} =~ m{ ^ = }xms
+            and confess "A POD tag is not allowed in $block";
+    }
 
     # after __END__ this handle is open
     {
@@ -30,16 +39,49 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         () = close ::DATA;
     }
 
-    # format usage
-    $param_of{usage} =~ s{ \A \n+ (.*?) \n+ \z }{$1}xms;
-    my @usage = map { ## no critic (ComplexMappings)
-        my $value
-            = q{ } x $param_of{indent}
-            . $_;
+    # format block
+    my ($code_block, $before_code_block, $after_code_block) = map {
+        defined $_
+        ? do {
+            my $value = $_;
+            $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms;
+            [ split m{ \n }xms, $value ];
+        }
+        : ();
+    } @param_of{ qw(code_block before_code_block after_code_block ) };
+    my @block = map { ## no critic (ComplexMappings)
+        my $value = $_;
         $value =~ s{ \t }{ q{ } x $param_of{indent} }xmsge;
-        $value =~ s{ \A \s+ \z }{}xms;
+        $value =~ s{ \s+ \z }{}xms;
         $value;
-    } split m{ \n }xms, $param_of{usage};
+    } (
+        (
+            $before_code_block
+            ? (
+                @{$before_code_block},
+                q{},
+            )
+            : ()
+        ),
+        (
+            $code_block
+            ? do {
+                map {
+                    q{ } x $param_of{indent}
+                    . $_;
+                } @{$code_block};
+            }
+            : ()
+        ),
+        (
+            $after_code_block
+            ? (
+                q{},
+                @{$after_code_block}
+            )
+            : ()
+        ),
+    );
 
     # open file
     open my $file_handle, '+<', $param_of{filename} ## no critic (BriefOpen)
@@ -68,8 +110,8 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         }
         if ( $line =~ m{ \A \Q$param_of{tag}\E \z }xms ) {
             $is_found++;
-            splice @content, $index + 1, 0, q{}, @usage, q{};
-            $index += 1 + @usage + 1;
+            splice @content, $index + 1, 0, q{}, @block, q{};
+            $index += 1 + @block + 1;
         }
         $index++;
     }
@@ -107,8 +149,8 @@ Getopt::Long::Descriptive::POD - write usage to POD
     
     if ( 'during development and test or ...' ) {
         replace_pod({
-            tag    => '=head1 USAGE',
-            usage  => $usage->text(),
+            tag        => '=head1 USAGE',
+            code_block => $usage->text(),
         });
     }
     
@@ -135,16 +177,27 @@ Put a section into that POD
 like C<=head1 USAGE>
 or C<=head2 special usage for foo bar>.
 No matter what is inside of that section
-but no line looks like a POD tag beginning with C<=>. 
+but no line looks like a POD tag beginning with C<=>.
+
+A tabulator will be changed to "indent" whitespaces.
+In code_block, before_code_block and after_code_block POD tags are not allowed. 
 
 Run this subroutine and the usage is in the POD.
 
     replace_pod({
-        tag      => '=head1 USAGE',
-        usage    => $usage->text(),
+        tag => '=head1 USAGE',
+        
+        # optional (but not really) the usage as block of code
+        code_block => $usage->text(),
+        
+        # optional text before that usage
+        before_code_block => $multiline_text,
+        
+        # optional text after that usage
+        after_code_block => $multiline_text,
         
         # optional if ident 1 is not enough
-        indent   => 4,
+        indent => 4,
         
         # optional if confess ist not the expected behaviour
         on_fail => sub { do something like die or exit },
