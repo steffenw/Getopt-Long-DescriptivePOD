@@ -5,24 +5,22 @@ use warnings;
 
 our $VERSION = '0.01';
 
-use Carp qw(confess);
+use Carp qw(carp confess);
 use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR);
+use File::Slurp qw(read_file write_file);
 use Params::Validate qw(validate SCALAR SCALARREF CODEREF);
 use Perl6::Export::Attrs;
-require Tie::File;
 
 sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     my %param_of = validate(
         @_,
         {
-            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME },
-            encoding          => { type => SCALAR, optional => 1 },
+            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME},
             tag               => { regex => qr{ \A = \w }xms },
             before_code_block => { type => SCALAR, optional => 1 },
             code_block        => { type => SCALAR, optional => 1 },
             after_code_block  => { type => SCALAR, optional => 1 },
             indent            => { regex => qr{ \A \d+ \z }xms, default => 1 },
-            on_fail           => { type => CODEREF, default => sub {confess @_} },
         },
     );
 
@@ -44,6 +42,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         defined $_
         ? do {
             my $value = $_;
+            $value =~ s{ \r }{}xmsg;
             $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms;
             [ split m{ \n }xms, $value ];
         }
@@ -83,18 +82,18 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         ),
     );
 
-    # open file
-    open my $file_handle, '+<', $param_of{filename} ## no critic (BriefOpen)
-        or $param_of{on_fail}->( "Can not open '$param_of{filename}' $OS_ERROR" );
-    if ( $param_of{encoding} ) {
-        binmode $file_handle, $param_of{encoding}
-            or $param_of{on_fail}->( "Can not binmode '$param_of{filename}' $OS_ERROR" );
-    }
-    tie ## no critic (Ties)
-        my @content,
-        'Tie::File',
-        $file_handle,
-        recsep => "\n";
+    # read file
+    read_file(
+        $param_of{filename},
+        binmode => ':raw',
+        buf_ref => \my $current_content,
+        err_mode => 'carp',
+    );
+    $current_content
+        or return;
+    my ($newline)         = $current_content =~ m{ ( \r? \n ) }xms;
+    my $is_newline_at_eof = $current_content =~ m{ \n \z }xms;
+    my @content           = split m{ \n }xms, $current_content;
 
     # replace POD
     my $is_found;
@@ -107,6 +106,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
                 last LINE;
             }
             splice @content, $index, 1; # delete current line
+            redo LINE;
         }
         if ( $line =~ m{ \A \Q$param_of{tag}\E \z }xms ) {
             $is_found++;
@@ -116,8 +116,23 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         $index++;
     }
 
-    # close file
-    untie @content;
+    # check changes
+    my $new_content = join $newline, @content;
+    if ( $is_newline_at_eof ) {
+        $new_content .= $newline;
+    }
+    $new_content eq $current_content
+        and return;
+
+    # write file
+    write_file(
+        $param_of{filename},
+        {
+            binmode  => ':raw',
+            err_mode => 'confess',
+        },
+        $new_content,
+    );
 
     return;
 }
@@ -146,14 +161,14 @@ Getopt::Long::Descriptive::POD - write usage to POD
     my ($opt, $usage) = describe_options(
         ...
     );
-    
+
     if ( 'during development and test or ...' ) {
         replace_pod({
             tag        => '=head1 USAGE',
             code_block => $usage->text(),
         });
     }
-    
+
 =head1 EXAMPLE
 
 Inside of this Distribution is a directory named example.
@@ -180,42 +195,37 @@ No matter what is inside of that section
 but no line looks like a POD tag beginning with C<=>.
 
 A tabulator will be changed to "indent" whitespaces.
-In code_block, before_code_block and after_code_block POD tags are not allowed. 
+In code_block, before_code_block and after_code_block POD tags are not allowed.
 
 Run this subroutine and the usage is in the POD.
 
     replace_pod({
         tag => '=head1 USAGE',
-        
+
         # optional (but not really) the usage as block of code
         code_block => $usage->text(),
-        
+
         # optional text before that usage
         before_code_block => $multiline_text,
-        
+
         # optional text after that usage
         after_code_block => $multiline_text,
-        
+
         # optional if ident 1 is not enough
         indent => 4,
-        
-        # optional if confess ist not the expected behaviour
-        on_fail => sub { do something like die or exit },
-        
-        # optional if some umlauts are in the usage
-        # the default encoding is :raw
-        encoding => { type => SCALAR, default => ':raw' },
-        
-        # for testing only
+
+        # for testing or batch
         # the default filename is $PROGRAM_NAME ($0)
         filename => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME},
     });
-    
+
 =head1 DIAGNOSTICS
 
 Confesses on false subroutine parameters.
 
-The default is to confess on problems with reading/writing file.
+Carps on read file.
+
+Confesses on write file.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
@@ -227,11 +237,11 @@ Carp
 
 English
 
+L<File::Slurp|File::Slurp>
+
 L<Params::Validate|Params::Validate>
 
 L<Perl6::Export::Attrs|Perl6::Export::Attrs>
-
-L<Tie::File|Tie::File>
 
 =head1 INCOMPATIBILITIES
 

@@ -30,9 +30,9 @@ This module requires these other modules and libraries:
 
     Carp
     English
+    File::Slurp
     Params::Validate
     Perl6::Export::Attrs
-    Tie::File
 
 COPYRIGHT AND LICENCE
 
