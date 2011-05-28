@@ -1,5 +1,5 @@
-Getopt::Long::Descriptive::POD version 0.01
-===========================================
+Getopt::Long::DescriptivePOD version 0.01
+=========================================
 
 Getopt::Long::Descriptive is a excellent way
 to write parameters and usage at the same time.
