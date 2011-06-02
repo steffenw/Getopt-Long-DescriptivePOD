@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6 + 1;
+use Test::More tests => 7 + 1;
 use Test::NoWarnings;
 use Test::Exception;
 use Test::Differences;
@@ -14,15 +14,16 @@ BEGIN {
 }
 
 my $content = <<'EOT';
-
 =head1 FOO
-
 foo
-
 =head1 USAGE
 
-=head1 BAR
+    my-program [-v] [long options...] <some-arg>
+        -v --verbose   print extra stuff
 
+        --help         print usage message and exit
+
+=head1 BAR
 EOT
 
 my ($opt, $usage);
@@ -57,11 +58,8 @@ lives_ok(
 );
 
 eq_or_diff($content, <<"EOT", 'usage in POD');
-
 =head1 FOO
-
 foo
-
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
@@ -70,6 +68,6 @@ foo
         --help         print usage message and exit
 
 =head1 BAR
-
 EOT
+
 ;

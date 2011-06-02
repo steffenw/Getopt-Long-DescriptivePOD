@@ -5,100 +5,143 @@ use warnings;
 
 our $VERSION = '0.01';
 
-use Carp qw(carp confess);
+use Carp qw(confess);
 use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR $INPUT_RECORD_SEPARATOR);
 use Params::Validate qw(validate SCALAR SCALARREF CODEREF);
 use Perl6::Export::Attrs;
+
+sub _on_verbose {
+    my ($param_ref, $string) = @_;
+
+    if ( $param_ref->{on_verbose} ) {
+        $param_ref->{on_verbose}->($string);
+    }
+
+    return;
+}
+
+sub _close_data {
+    # after __END__ this handle is open
+    no warnings qw(once); ## no critic (ProhibitNoWarnings)
+
+    return close ::DATA;
+}
+
+sub _format_block {
+    my $block_ref = shift;
+
+    for my $key ( keys %{$block_ref} ) {
+        VALUE: for my $value ( $block_ref->{$key} ) { # alias only
+            defined $value
+                or next VALUE;
+            $value =~ s{ \r\n | \n | \r }{\n}xmsg;     # compatible \n
+            $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms; # trim
+            $value = [
+                ( $key eq 'after' ? q{} : () ),
+                ( split m{ \n }xms, $value ),
+                ( $key eq 'before' ? q{} : () ),
+            ];
+        }
+    }
+
+    return;
+}
+
+sub _read_file {
+    my $param_ref = shift;
+
+    if ( ref $param_ref->{filename} ) {
+        return ${ $param_ref->{filename} };
+    }
+    if ( open my $file, '< :raw', $param_ref->{filename} ) {
+        local $INPUT_RECORD_SEPARATOR = ();
+        my $content = <$file>;
+        () = close $file;
+        return $content;
+    }
+    if ( $param_ref->{logger} ) {
+        $param_ref->{logger}->( "Can not open file $param_ref->{filename} $OS_ERROR" );
+    }
+
+    return;
+}
+
+sub _write_file {
+    my ($param_ref, $content) = @_;
+
+    if ( ref $param_ref->{filename} ) {
+        ${ $param_ref->{filename} } = $content;
+        return;
+    }
+    open my $file, '> :raw', $param_ref->{filename}
+        or confess "Can not open file $param_ref->{filename} $OS_ERROR";
+    print {$file} $content
+        or confess "Can not write file $param_ref->{filename} $OS_ERROR";
+    close $file
+        or confess "Can not close file $param_ref->{filename} $OS_ERROR";
+
+    return;
+}
 
 sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     my %param_of = validate(
         @_,
         {
-            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME},
+            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME },
             tag               => { regex => qr{ \A = \w }xms },
             before_code_block => { type => SCALAR, optional => 1 },
-            code_block        => { type => SCALAR, optional => 1 },
+            code_block        => { type => SCALAR },
             after_code_block  => { type => SCALAR, optional => 1 },
             indent            => { regex => qr{ \A \d+ \z }xms, default => 1 },
+            on_verbose        => { type => CODEREF, optional => 1 },
         },
     );
 
-    BLOCK: for my $block ( qw(before_code_block after_code_block) ) {
-        defined $param_of{block}
+    BLOCK: for my $block ( qw(before_code_block code_block after_code_block) ) {
+        defined $param_of{$block}
             or next BLOCK;
-        $param_of{block} =~ m{ ^ = }xms
+        $param_of{$block} =~ m{ ^ = }xms
             and confess "A POD tag is not allowed in $block";
     }
 
-    # after __END__ this handle is open
-    {
-        no warnings qw(once); ## no critic (ProhibitNoWarnings)
-        () = close ::DATA;
+    _close_data();
+
+    # clone
+    my %block_of = (
+        before => $param_of{before_code_block},
+        code   => $param_of{code_block},
+        after  => $param_of{after_code_block},
+    );
+
+    _format_block( \%block_of );
+
+    for my $line ( @{ $block_of{code} } ) {
+        $line = q{ } x $param_of{indent} . $line;
     }
 
-    # format block
-    my ($code_block, $before_code_block, $after_code_block) = map {
-        defined $_
-        ? do {
-            my $value = $_;
-            $value =~ s{ \r\n | \n | \r }{\n}xmsg;
-            $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms;
-            [ split m{ \n }xms, $value ];
-        }
-        : ();
-    } @param_of{ qw(code_block before_code_block after_code_block ) };
+    # \t to indent, trim EOL
     my @block = map { ## no critic (ComplexMappings)
         my $value = $_;
         $value =~ s{ \t }{ q{ } x $param_of{indent} }xmsge;
         $value =~ s{ \s+ \z }{}xms;
         $value;
     } (
-        (
-            $before_code_block
-            ? (
-                @{$before_code_block},
-                q{},
-            )
-            : ()
-        ),
-        (
-            $code_block
-            ? do {
-                map {
-                    q{ } x $param_of{indent}
-                    . $_;
-                } @{$code_block};
-            }
-            : ()
-        ),
-        (
-            $after_code_block
-            ? (
-                q{},
-                @{$after_code_block}
-            )
-            : ()
-        ),
+        @{ $block_of{before} || [] },
+        @{ $block_of{code} },
+        @{ $block_of{after} || [] },
     );
 
-    # read file
-    my $current_content;
-    if ( ref $param_of{filename} eq 'SCALAR' ) {
-        $current_content = ${ $param_of{filename} };
+    my $current_content = _read_file( \%param_of );
+    if ( ! $current_content ) {
+        _on_verbose( \%param_of, 'Empty file detected' );
+        return;
     }
-    elsif ( open my $file, '< :raw', $param_of{filename} ) {
-        local $INPUT_RECORD_SEPARATOR = ();
-        $current_content = <$file>;
-        () = close $file;
-    }
-    else {
-        carp "Can not open file $param_of{filename} $OS_ERROR";
-    }
-    $current_content
-        or return;
-    my ($newline)         = $current_content =~ m{ ( \r\n | \n | \r ) }xms;
-    my $is_newline_at_eof = $current_content =~ m{ \n \z }xms;
-    my @content           = split m{ \n }xms, $current_content;
+    my ($newline) = $current_content =~ m{ ( \r\n | \n | \r ) }xms;
+    $current_content =~ s{ \r\n | \n | \r }{\n}xmsg;
+    my ($newlines_at_eof) = $current_content =~ m{ ( \n+ ) \z }xms;
+    $newlines_at_eof = length +( $newlines_at_eof || q{} );
+    $current_content =~ s{ \n+ \z }{}xms;
+    my @content = split m{ \n }xms, $current_content;
 
     # replace POD
     my $is_found;
@@ -123,29 +166,24 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
 
     # check changes
     my $new_content = join $newline, @content;
-    if ( $is_newline_at_eof ) {
-        $new_content .= $newline;
-    }
-    $new_content eq $current_content
-        and return;
-
-    # write file
-    if ( ref $param_of{filename} eq 'SCALAR' ) {
-        ${ $param_of{filename} } = $new_content;
+    if ( $newlines_at_eof ) {
+        $new_content .= $newline x $newlines_at_eof;
+        _on_verbose( \%param_of, "$newlines_at_eof newline(s) at EOF detected" );
     }
     else {
-        open my $file, '> :raw', $param_of{filename}
-            or confess "Can not open file $param_of{filename} $OS_ERROR";
-        print {$file} $new_content
-            or confess "Can not write file $param_of{filename} $OS_ERROR";
-        close $file
-            or confess "Can not close file $param_of{filename} $OS_ERROR";
+        _on_verbose( \%param_of, 'No newline at EOF detected' );
     }
+    if ( $new_content eq $current_content ) {
+        _on_verbose( \%param_of, 'Equal content - nothing to do' );
+        return;
+    }
+
+    _write_file( \%param_of, $new_content );
 
     return;
 }
 
-# $Id: DescriptivePOD.pm 13588 2011-05-27 06:46:28Z root $
+# $Id: $
 
 1;
 

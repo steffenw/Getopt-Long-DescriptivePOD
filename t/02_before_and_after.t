@@ -14,15 +14,10 @@ BEGIN {
 }
 
 my $content = <<'EOT';
-
 =head1 FOO
-
 foo
-
 =head1 USAGE
-
 =head1 BAR
-
 EOT
 
 my ($opt, $usage);
@@ -41,10 +36,11 @@ lives_ok(
 lives_ok(
     sub {
         replace_pod({
-            filename   => \$content,
-            tag        => '=head1 USAGE',
-            code_block => $usage->text(),
-            indent     => 4,
+            filename          => \$content,
+            tag               => '=head1 USAGE',
+            code_block        => $usage->text(),
+            before_code_block => "\nbefore1\nbefore2\n",
+            after_code_block  => "\nafter1\nafter2\n",
             on_verbose => sub {
                 my $message = shift;
                 $message =~ tr{\n}{ };
@@ -57,19 +53,21 @@ lives_ok(
 );
 
 eq_or_diff($content, <<"EOT", 'usage in POD');
-
 =head1 FOO
-
 foo
-
 =head1 USAGE
 
-    my-program [-v] [long options...] <some-arg>
-        -v --verbose   print extra stuff
+before1
+before2
 
-        --help         print usage message and exit
+ my-program [-v] [long options...] <some-arg>
+  -v --verbose   print extra stuff
+
+  --help         print usage message and exit
+
+after1
+after2
 
 =head1 BAR
-
 EOT
 ;

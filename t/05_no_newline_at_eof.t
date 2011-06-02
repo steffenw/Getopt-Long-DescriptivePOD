@@ -13,16 +13,11 @@ BEGIN {
     use_ok('Getopt::Long::DescriptivePOD');
 }
 
-my $content = <<'EOT';
-
+my $content = <<'EOT' . 'bla';
 =head1 FOO
-
 foo
-
 =head1 USAGE
-
 =head1 BAR
-
 EOT
 
 my ($opt, $usage);
@@ -56,12 +51,9 @@ lives_ok(
     'replace_pod',
 );
 
-eq_or_diff($content, <<"EOT", 'usage in POD');
-
+eq_or_diff($content, <<"EOT" . 'bla', 'usage in POD');
 =head1 FOO
-
 foo
-
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
@@ -70,6 +62,5 @@ foo
         --help         print usage message and exit
 
 =head1 BAR
-
 EOT
 ;
