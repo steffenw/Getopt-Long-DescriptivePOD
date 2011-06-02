@@ -13,7 +13,7 @@ use English qw(-no_macht_vars $OS_ERROR);
 
 BEGIN {
     use_ok('Getopt::Long::Descriptive');
-    use_ok('Getopt::Long::Descriptive::POD');
+    use_ok('Getopt::Long::DescriptivePOD');
 }
 
 my $content = <<'EOT';

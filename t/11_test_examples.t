@@ -20,7 +20,7 @@ my @data = (
         test     => '01_example',
         path     => 'example',
         filename => '01_example.pl',
-        params   => '-I../lib -T',
+        params   => '-I../lib -t',
         result   => <<'EOT',
 EOT
     },
@@ -56,6 +56,7 @@ for my $data (@data) {
     () = close $file_handle;
 
     chdir($current_dir);
+    
     eq_or_diff(
         $result,
         q{},

@@ -1,4 +1,4 @@
-package Getopt::Long::Descriptive::POD;
+package Getopt::Long::DescriptivePOD;
 
 use strict;
 use warnings;
@@ -6,8 +6,7 @@ use warnings;
 our $VERSION = '0.01';
 
 use Carp qw(carp confess);
-use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR);
-use File::Slurp qw(read_file write_file);
+use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR $INPUT_RECORD_SEPARATOR);
 use Params::Validate qw(validate SCALAR SCALARREF CODEREF);
 use Perl6::Export::Attrs;
 
@@ -42,7 +41,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         defined $_
         ? do {
             my $value = $_;
-            $value =~ s{ \r }{}xmsg;
+            $value =~ s{ \r\n | \n | \r }{\n}xmsg;
             $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms;
             [ split m{ \n }xms, $value ];
         }
@@ -83,15 +82,21 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     );
 
     # read file
-    read_file(
-        $param_of{filename},
-        binmode => ':raw',
-        buf_ref => \my $current_content,
-        err_mode => 'carp',
-    );
+    my $current_content;
+    if ( ref $param_of{filename} eq 'SCALAR' ) {
+        $current_content = ${ $param_of{filename} };
+    }
+    elsif ( open my $file, '< :raw', $param_of{filename} ) {
+        local $INPUT_RECORD_SEPARATOR = ();
+        $current_content = <$file>;
+        () = close $file;
+    }
+    else {
+        carp "Can not open file $param_of{filename} $OS_ERROR";
+    }
     $current_content
         or return;
-    my ($newline)         = $current_content =~ m{ ( \r? \n ) }xms;
+    my ($newline)         = $current_content =~ m{ ( \r\n | \n | \r ) }xms;
     my $is_newline_at_eof = $current_content =~ m{ \n \z }xms;
     my @content           = split m{ \n }xms, $current_content;
 
@@ -101,7 +106,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     LINE: while ( $index < @content ) {
         my $line = $content[$index];
         if ( $is_found ) {
-            if ( $line =~ m{ \A = \w }xms ) { # stop deleting on new tag
+            if ( $line =~ m{ \A = \w }xms ) { # stop deleting on next tag
                 $is_found = ();
                 last LINE;
             }
@@ -125,19 +130,22 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         and return;
 
     # write file
-    write_file(
-        $param_of{filename},
-        {
-            binmode  => ':raw',
-            err_mode => 'confess',
-        },
-        $new_content,
-    );
+    if ( ref $param_of{filename} eq 'SCALAR' ) {
+        ${ $param_of{filename} } = $new_content;
+    }
+    else {
+        open my $file, '> :raw', $param_of{filename}
+            or confess "Can not open file $param_of{filename} $OS_ERROR";
+        print {$file} $new_content
+            or confess "Can not write file $param_of{filename} $OS_ERROR";
+        close $file
+            or confess "Can not close file $param_of{filename} $OS_ERROR";
+    }
 
     return;
 }
 
-# $Id$
+# $Id: DescriptivePOD.pm 13588 2011-05-27 06:46:28Z root $
 
 1;
 
@@ -147,7 +155,7 @@ __END__
 
 =head1 NAME
 
-Getopt::Long::Descriptive::POD - write usage to POD
+Getopt::Long::DescriptivePOD - write usage to POD
 
 =head1 VERSION
 
@@ -156,7 +164,7 @@ Getopt::Long::Descriptive::POD - write usage to POD
 =head1 SYNOPSIS
 
     use Getopt::Long::Descriptive;
-    use Getopt::Long::Descriptive::POD;
+    use Getopt::Long::DescriptivePOD;
 
     my ($opt, $usage) = describe_options(
         ...
@@ -236,8 +244,6 @@ nothing
 Carp
 
 English
-
-L<File::Slurp|File::Slurp>
 
 L<Params::Validate|Params::Validate>
 
