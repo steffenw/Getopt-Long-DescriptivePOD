@@ -3,7 +3,7 @@ package Getopt::Long::DescriptivePod;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp qw(confess);
 use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR $INPUT_RECORD_SEPARATOR);
@@ -185,6 +185,16 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     return;
 }
 
+sub format_usage_text or trim_lines {
+    my ( undef, $text ) = @_;
+
+    $text =~ s{\s+}{ }xmsg;
+    $text =~ s{\A \s+}{}xms;
+    $text =~ s{\s+ \z}{}xms;
+
+    return $text;
+}
+
 # $Id: $
 
 1;
@@ -207,13 +217,15 @@ Getopt::Long::DescriptivePod - write usage to Pod
     use Getopt::Long::DescriptivePod;
 
     my ($opt, $usage) = describe_options(
+        '%c %o',
+        [ 'help|h|?', 'help' ],
         ...
     );
 
     if ( 'during development and test or ...' ) {
         replace_pod({
             tag        => '=head1 USAGE',
-            code_block => $usage->text(),
+            code_block => $usage->text,
         });
     }
 
@@ -251,7 +263,7 @@ Run this subroutine and the usage is in the Pod.
         tag => '=head1 USAGE',
 
         # the usage as block of code
-        code_block => $usage->text(),
+        code_block => $usage->text,
 
         # optional text before that usage
         before_code_block => $multiline_text,
@@ -265,7 +277,7 @@ Run this subroutine and the usage is in the Pod.
         # for testing or batch
         # the default filename is $PROGRAM_NAME ($0)
         filename => $filename; # or \$content_of_file,
-        
+
         # optional to find out why the module has done nothing
         on_verbose => sub { my $message = shift; ... },
     });

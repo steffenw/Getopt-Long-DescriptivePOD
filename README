@@ -1,4 +1,4 @@
-Getopt::Long::DescriptivePod version 0.01
+Getopt::Long::DescriptivePod version 0.02
 =========================================
 
 Getopt::Long::Descriptive is a excellent way
@@ -35,7 +35,7 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2011,
+Copyright (c) 2011 - 2012,
 Steffen Winkler
 steffenw at cpan.org.
 All rights reserved.

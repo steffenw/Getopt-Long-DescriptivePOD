@@ -38,7 +38,7 @@ lives_ok(
         replace_pod({
             filename          => \$content,
             tag               => '=head1 USAGE',
-            code_block        => $usage->text(),
+            code_block        => $usage->text,
             before_code_block => "\nbefore1\nbefore2\n",
             after_code_block  => "\nafter1\nafter2\n",
             on_verbose => sub {

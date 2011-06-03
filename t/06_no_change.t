@@ -44,7 +44,7 @@ lives_ok(
         replace_pod({
             filename   => \$content,
             tag        => '=head1 USAGE',
-            code_block => $usage->text(),
+            code_block => $usage->text,
             indent     => 4,
             on_verbose => sub {
                 my $message = shift;
