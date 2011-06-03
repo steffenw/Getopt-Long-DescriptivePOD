@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 
 use strict;
 use warnings;
@@ -51,7 +51,7 @@ lives_ok(
     'replace_pod',
 );
 
-eq_or_diff($content, <<"EOT" . 'bla', 'usage in Pod');
+eq_or_diff($content, <<'EOT' . 'bla', 'usage in Pod');
 =head1 FOO
 foo
 =head1 USAGE

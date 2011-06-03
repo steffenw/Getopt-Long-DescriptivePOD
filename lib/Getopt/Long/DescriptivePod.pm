@@ -59,9 +59,7 @@ sub _read_file {
         () = close $file;
         return $content;
     }
-    if ( $param_ref->{logger} ) {
-        $param_ref->{logger}->( "Can not open file $param_ref->{filename} $OS_ERROR" );
-    }
+    _verbose( $param_ref, "Can not open file $param_ref->{filename} $OS_ERROR" );
 
     return;
 }
@@ -165,9 +163,12 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     }
 
     # check changes
-    my $new_content = join $newline, @content;
+    my $new_content = join "\n", @content;
     if ( $newlines_at_eof ) {
-        $new_content .= $newline x $newlines_at_eof;
+        # restore current_content too
+        for my $content ( $current_content, $new_content ) {
+            $content .= "\n" x $newlines_at_eof;
+        }
         _on_verbose( \%param_of, "$newlines_at_eof newline(s) at EOF detected" );
     }
     else {
@@ -178,6 +179,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         return;
     }
 
+    $new_content =~ s{\n}{$newline}xmsg;
     _write_file( \%param_of, $new_content );
 
     return;

@@ -23,7 +23,6 @@ Module::Build->new(
     dist_version_from => 'lib/Getopt/Long/DescriptivePod.pm',
     requires          => {
         perl                   => 5.008, # open \$scalar, io-layer?
-        'File::Slurp'          => 0,
         'Params::Validate'     => 0,
         'Perl6::Export::Attrs' => 0,
         $is_ppm
