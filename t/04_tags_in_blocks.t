@@ -8,7 +8,7 @@ use Test::NoWarnings;
 use Test::Exception;
 
 BEGIN {
-    use_ok('Getopt::Long::DescriptivePOD');
+    use_ok('Getopt::Long::DescriptivePod');
 }
 
 throws_ok(
@@ -20,7 +20,7 @@ throws_ok(
             code_block        => q{},
         });
     },
-    qr{\A \QA POD tag is not allowed in before_code_block at}xms,
+    qr{\A \QA Pod tag is not allowed in before_code_block at}xms,
     'before',
 );
 
@@ -32,7 +32,7 @@ throws_ok(
             code_block => "=t\n",
         });
     },
-    qr{\A \QA POD tag is not allowed in code_block at}xms,
+    qr{\A \QA Pod tag is not allowed in code_block at}xms,
     'code',
 );
 
@@ -45,6 +45,6 @@ throws_ok(
             after_code_block => "=t\n",
         });
     },
-    qr{\A \QA POD tag is not allowed in after_code_block at}xms,
+    qr{\A \QA Pod tag is not allowed in after_code_block at}xms,
     'after',
 );

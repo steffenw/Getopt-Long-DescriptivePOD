@@ -1,4 +1,4 @@
-package Getopt::Long::DescriptivePOD;
+package Getopt::Long::DescriptivePod;
 
 use strict;
 use warnings;
@@ -101,7 +101,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         defined $param_of{$block}
             or next BLOCK;
         $param_of{$block} =~ m{ ^ = }xms
-            and confess "A POD tag is not allowed in $block";
+            and confess "A Pod tag is not allowed in $block";
     }
 
     _close_data();
@@ -143,7 +143,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     $current_content =~ s{ \n+ \z }{}xms;
     my @content = split m{ \n }xms, $current_content;
 
-    # replace POD
+    # replace Pod
     my $is_found;
     my $index = 0;
     LINE: while ( $index < @content ) {
@@ -193,7 +193,7 @@ __END__
 
 =head1 NAME
 
-Getopt::Long::DescriptivePOD - write usage to POD
+Getopt::Long::DescriptivePod - write usage to Pod
 
 =head1 VERSION
 
@@ -202,7 +202,7 @@ Getopt::Long::DescriptivePOD - write usage to POD
 =head1 SYNOPSIS
 
     use Getopt::Long::Descriptive;
-    use Getopt::Long::DescriptivePOD;
+    use Getopt::Long::DescriptivePod;
 
     my ($opt, $usage) = describe_options(
         ...
@@ -225,25 +225,25 @@ Run this *.pl files.
 C<Getopt::Long::Descriptive> is a excellent way
 to write parameters and usage at the same time.
 
-This module allows to write POD at the same time too.
-The idea is to write the usage in the POD of the current script
+This module allows to write Pod at the same time too.
+The idea is to write the usage in the Pod of the current script
 during development or test.
 
 =head1 SUBROUTINES/METHODS
 
 =head2 sub replace_pod
 
-Write the POD for your script and the POD.
-Put a section into that POD
+Write the Pod for your script and the Pod.
+Put a section into that Pod
 like C<=head1 USAGE>
 or C<=head2 special usage for foo bar>.
 No matter what is inside of that section
-but no line looks like a POD tag beginning with C<=>.
+but no line looks like a Pod tag beginning with C<=>.
 
 A tabulator will be changed to "indent" whitespaces.
-In code_block, before_code_block and after_code_block POD tags are not allowed.
+In code_block, before_code_block and after_code_block Pod tags are not allowed.
 
-Run this subroutine and the usage is in the POD.
+Run this subroutine and the usage is in the Pod.
 
     replace_pod({
         tag => '=head1 USAGE',

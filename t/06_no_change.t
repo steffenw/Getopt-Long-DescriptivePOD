@@ -10,7 +10,7 @@ use Test::Differences;
 
 BEGIN {
     use_ok('Getopt::Long::Descriptive');
-    use_ok('Getopt::Long::DescriptivePOD');
+    use_ok('Getopt::Long::DescriptivePod');
 }
 
 my $content = <<'EOT';
@@ -57,7 +57,7 @@ lives_ok(
     'replace_pod',
 );
 
-eq_or_diff($content, <<"EOT", 'usage in POD');
+eq_or_diff($content, <<"EOT", 'usage in Pod');
 =head1 FOO
 foo
 =head1 USAGE

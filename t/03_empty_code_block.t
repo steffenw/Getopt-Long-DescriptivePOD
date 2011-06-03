@@ -8,7 +8,7 @@ use Test::NoWarnings;
 use Test::Exception;
 
 BEGIN {
-    use_ok('Getopt::Long::DescriptivePOD');
+    use_ok('Getopt::Long::DescriptivePod');
 }
 
 lives_ok(

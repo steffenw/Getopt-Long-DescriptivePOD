@@ -16,11 +16,11 @@ my $is_ppm
     );
 
 Module::Build->new(
-    module_name       => 'Getopt::Long::DescriptivePOD',
+    module_name       => 'Getopt::Long::DescriptivePod',
     license           => 'perl',
-    dist_abstract     => 'Getopt::Long::DescriptivePOD - write usage to POD',
+    dist_abstract     => 'Getopt::Long::DescriptivePod - write usage to Pod',
     dist_author       => 'Steffen Winkler <steffenw at cpan.org>',
-    dist_version_from => 'lib/Getopt/Long/DescriptivePOD.pm',
+    dist_version_from => 'lib/Getopt/Long/DescriptivePod.pm',
     requires          => {
         perl                   => 5.008, # open \$scalar, io-layer?
         'File::Slurp'          => 0,

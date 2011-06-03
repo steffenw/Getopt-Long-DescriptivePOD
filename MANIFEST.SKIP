@@ -70,7 +70,7 @@
 ^MANIFEST\.SKIP
 
 # Avoid archives of this distribution
-\bGetopt-Long-DescriptivePOD-[\d\.\_]+
+\bGetopt-Long-DescriptivePod-[\d\.\_]+
 
 # Avoid Windows test startup
 \.bat$
