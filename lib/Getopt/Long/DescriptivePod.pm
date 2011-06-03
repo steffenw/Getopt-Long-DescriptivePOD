@@ -250,7 +250,7 @@ Run this subroutine and the usage is in the Pod.
     replace_pod({
         tag => '=head1 USAGE',
 
-        # optional (but not really) the usage as block of code
+        # the usage as block of code
         code_block => $usage->text(),
 
         # optional text before that usage
@@ -264,14 +264,17 @@ Run this subroutine and the usage is in the Pod.
 
         # for testing or batch
         # the default filename is $PROGRAM_NAME ($0)
-        filename => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME},
+        filename => $filename; # or \$content_of_file,
+        
+        # optional to find out why the module has done nothing
+        on_verbose => sub { my $message = shift; ... },
     });
 
 =head1 DIAGNOSTICS
 
 Confesses on false subroutine parameters.
 
-Carps on read file.
+See parameter on_verbose.
 
 Confesses on write file.
 
