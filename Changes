@@ -1,7 +1,9 @@
 Revision history for Perl extension Getopt::Long::DescriptivePod
 
-0.02  Wed Apr 24 22:00:00 2012
+0.02  Sun May  6 07:32:43 2012
 - repaired Makefile.PL
+- added sub trim_lines
+- repaired example
 
 0.01  Sat Jun  4 00:15:00 2011
 - first release

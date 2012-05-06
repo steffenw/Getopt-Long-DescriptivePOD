@@ -221,7 +221,7 @@ Getopt::Long::DescriptivePod - write usage to Pod
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 SYNOPSIS
 
