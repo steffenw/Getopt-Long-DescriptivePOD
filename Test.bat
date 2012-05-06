@@ -1,4 +1,4 @@
-perl -w -e "unlink qw(./MANIFEST ./Debian_CPANTS.txt), glob './*.ppd'"
+perl -w -e "unlink qw(./Debian_CPANTS.txt ./MANIFEST ./META.json), glob './*.ppd'"
 perl Build.PL
 call ./Build realclean
 
@@ -8,11 +8,9 @@ perl Build.PL
 
 echo -- test --
 pause
-set TEST_EXAMPLE=1
-set TEST_AUTHOR=1
+set AUTHOR_TESTING=1
 call ./Build test verbose=0
-set TEST_EXAMPLE=
-set TEST_AUTHOR=
+set AUTHOR_TESTING=
 
 echo -- testpod --
 pause
@@ -46,9 +44,9 @@ perl -w -e "use Test::More;use Test::Kwalitee"
 echo -- prereq_report --
 pause
 call ./Build prereq_report
-set TEST_RELEASE=1
+set RELEASE_TESTING=1
 perl t/prereq_build.t
-set TEST_RELEASE=
+set RELEASE_TESTING=
 
 echo -- AUTHOR_DIST=ppm --
 pause

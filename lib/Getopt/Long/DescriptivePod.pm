@@ -1,4 +1,4 @@
-package Getopt::Long::DescriptivePod;
+package Getopt::Long::DescriptivePod; ## no critic (TidyCode)
 
 use strict;
 use warnings;
@@ -34,8 +34,8 @@ sub _format_block {
         VALUE: for my $value ( $block_ref->{$key} ) { # alias only
             defined $value
                 or next VALUE;
-            $value =~ s{ \r\n | \n | \r }{\n}xmsg;     # compatible \n
-            $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms; # trim
+            $value =~ s{ \r\n | [\n\r]       }{\n}xmsg; # compatible \n
+            $value =~ s{ \A \n* (.*?) \n* \z }{$1}xms;  # trim
             $value = [
                 ( $key eq 'after' ? q{} : () ),
                 ( split m{ \n }xms, $value ),
@@ -85,13 +85,13 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     my %param_of = validate(
         @_,
         {
-            filename          => { type => SCALAR | SCALARREF, default => $PROGRAM_NAME },
+            filename          => { type  => SCALAR | SCALARREF, default => $PROGRAM_NAME },
             tag               => { regex => qr{ \A = \w }xms },
-            before_code_block => { type => SCALAR, optional => 1 },
-            code_block        => { type => SCALAR },
-            after_code_block  => { type => SCALAR, optional => 1 },
+            before_code_block => { type  => SCALAR, optional => 1 },
+            code_block        => { type  => SCALAR },
+            after_code_block  => { type  => SCALAR, optional => 1 },
             indent            => { regex => qr{ \A \d+ \z }xms, default => 1 },
-            on_verbose        => { type => CODEREF, optional => 1 },
+            on_verbose        => { type  => CODEREF, optional => 1 },
         },
     );
 
@@ -134,8 +134,8 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         _on_verbose( \%param_of, 'Empty file detected' );
         return;
     }
-    my ($newline) = $current_content =~ m{ ( \r\n | \n | \r ) }xms;
-    $current_content =~ s{ \r\n | \n | \r }{\n}xmsg;
+    my ($newline) = $current_content =~ m{ ( \r\n | [\n\r] ) }xms;
+    $current_content =~ s{ \r\n | [\n\r] }{\n}xmsg;
     my ($newlines_at_eof) = $current_content =~ m{ ( \n+ ) \z }xms;
     $newlines_at_eof = length +( $newlines_at_eof || q{} );
     $current_content =~ s{ \n+ \z }{}xms;
@@ -179,18 +179,30 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
         return;
     }
 
-    $new_content =~ s{\n}{$newline}xmsg;
+    $new_content =~ s{ \n }{$newline}xmsg;
     _write_file( \%param_of, $new_content );
 
     return;
 }
 
-sub format_usage_text or trim_lines {
-    my ( undef, $text ) = @_;
+sub trim_lines :Export(:DEFAULT) {
+    my ($text, $indent) = @_;
 
-    $text =~ s{\s+}{ }xmsg;
-    $text =~ s{\A \s+}{}xms;
-    $text =~ s{\s+ \z}{}xms;
+    if (! $indent) {
+        $text =~ s{ \s+    }{ }xmsg;
+        $text =~ s{ \A \s+ }{}xms;
+        $text =~ s{ \s+ \z }{}xms;
+        return $text;
+    }
+    $indent =~ m{ \A [1-9] \d* \z }xms
+        or confess "Indent $indent is not a positive integer";
+
+    # measure the first line
+    ($indent) = $text =~ m{ \A ( (?: [ ]{$indent} )+ ) }xms;
+    $indent = length $indent;
+
+    $text =~ s{ ^ [ ]{$indent} }{}xmsg;
+    $text =~ s{ [ ]+ $         }{}xmsg;
 
     return $text;
 }
@@ -282,6 +294,51 @@ Run this subroutine and the usage is in the Pod.
         on_verbose => sub { my $message = shift; ... },
     });
 
+=head2 sub trim_lines
+
+There are two ways of trimming.
+
+=head3 trim all whitespace
+
+    my ($opt, $usage) = describe_options(
+        ...
+        [ 'verbose|v',  trim_lines( <<'EOT' ) ],
+            Print extra stuff.
+            And here I show, how to work
+            with lots of lines as floating text.
+    EOT
+        ...
+    );
+
+=head3 trim blocks of whitespace in Pod
+
+The 2nd parameter of trim_lines if the given indent.
+Then C<trim_lines> measures the indent of every first line.
+
+    e.g. 2nd parameter of trim_lines = 4
+    text indent | count of removed whitespace
+    ------------+----------------------------
+    0 .. 3      | 0
+    4 .. 7      | 4
+    8 .. 11     | 8
+    ...         | ...
+
+    replace_pod({
+        before_code_block => trim_lines( <<'EOT', 4 ),
+            floating text
+            (removes 2 * 4 space of evey line)
+
+                some_code()
+    EOT
+        after_code_block => trim_lines( <<'EOT', 4 ),
+             some_code(
+                 'removes 2 * 4 space of evey line',
+             );
+
+    EOT
+    ...
+    });
+
 =head1 DIAGNOSTICS
 
 Confesses on false subroutine parameters.
@@ -310,7 +367,7 @@ not known
 
 =head1 BUGS AND LIMITATIONS
 
-C<__END__> in the script stops the compiler and opens the DATA file handle.
+C<__END__> in the script stops the compiler and provides the DATA file handle.
 After call of C<replace_pod> the DATA file handle is closed.
 
 Runs not on C<perl -e> calls or anything else with no real file name.
@@ -325,7 +382,7 @@ Steffen Winkler
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2011,
+Copyright (c) 2011 - 2012,
 Steffen Winkler
 C<< <steffenw at cpan.org> >>.
 All rights reserved.
