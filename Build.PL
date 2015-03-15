@@ -10,11 +10,11 @@ Module::Build->new(
     dist_author       => 'Steffen Winkler <steffenw at cpan.org>',
     dist_version_from => 'lib/Getopt/Long/DescriptivePod.pm',
     requires          => {
-        perl                   => 5.008, # open \$scalar, io-layer?
-        'Params::Validate'     => 0,
-        'Perl6::Export::Attrs' => 0,
-        Carp                   => 0, # perl dist
-        English                => 0, # perl dist
+        perl               => 5.008, # open \$scalar, io-layer?
+        Carp               => 0, # perl dist
+        English            => 0, # perl dist
+        'Params::Validate' => 0,
+        'Sub::Exporter'    => 0,
     },
     build_requires => {
         'Test::NoWarnings'          => 0,

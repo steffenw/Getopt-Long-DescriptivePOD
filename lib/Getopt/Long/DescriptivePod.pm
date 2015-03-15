@@ -3,12 +3,17 @@ package Getopt::Long::DescriptivePod; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp qw(confess);
 use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR $INPUT_RECORD_SEPARATOR);
 use Params::Validate qw(validate SCALAR SCALARREF CODEREF);
-use Perl6::Export::Attrs;
+use Sub::Exporter -setup => {
+    exports => [ qw( replace_pod trim_lines ) ],
+    groups  => {
+        default => [ qw( replace_pod trim_lines ) ],
+    },
+};
 
 sub _on_verbose {
     my ($param_ref, $string) = @_;
@@ -81,7 +86,7 @@ sub _write_file {
     return;
 }
 
-sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
+sub replace_pod { ## no critic (ArgUnpacking)
     my %param_of = validate(
         @_,
         {
@@ -102,7 +107,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
             and confess "A Pod tag is not allowed in $block";
     }
 
-    _close_data();
+    _close_data;
 
     # clone
     my %block_of = (
@@ -185,7 +190,7 @@ sub replace_pod :Export(:DEFAULT) { ## no critic (ArgUnpacking)
     return;
 }
 
-sub trim_lines :Export(:DEFAULT) {
+sub trim_lines {
     my ($text, $indent) = @_;
 
     if (! $indent) {
@@ -221,7 +226,7 @@ Getopt::Long::DescriptivePod - write usage to Pod
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SYNOPSIS
 
@@ -302,7 +307,7 @@ There are two ways of trimming.
 
     my ($opt, $usage) = describe_options(
         ...
-        [ 'verbose|v',  trim_lines( <<'EOT' ) ],
+        [ 'verbose|v', trim_lines( <<'EOT' ) ],
             Print extra stuff.
             And here I show, how to work
             with lots of lines as floating text.
@@ -328,12 +333,12 @@ Then C<trim_lines> measures the indent of every first line.
             floating text
             (removes 2 * 4 space of evey line)
 
-                some_code()
+                some_code;
     EOT
         after_code_block => trim_lines( <<'EOT', 4 ),
-             some_code(
-                 'removes 2 * 4 space of evey line',
-             );
+            some_code(
+                'removes 2 * 4 space of evey line',
+            );
 
     EOT
     ...
@@ -353,13 +358,13 @@ nothing
 
 =head1 DEPENDENCIES
 
-Carp
+L<Carp|Carp>
 
-English
+L<English|English>
 
 L<Params::Validate|Params::Validate>
 
-L<Perl6::Export::Attrs|Perl6::Export::Attrs>
+L<Sub::Exporter|Sub::Exporter>
 
 =head1 INCOMPATIBILITIES
 
@@ -382,7 +387,7 @@ Steffen Winkler
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2011 - 2012,
+Copyright (c) 2011 - 2015,
 Steffen Winkler
 C<< <steffenw at cpan.org> >>.
 All rights reserved.
@@ -390,5 +395,3 @@ All rights reserved.
 This module is free software;
 you can redistribute it and/or modify it
 under the same terms as Perl itself.
-
-=cut

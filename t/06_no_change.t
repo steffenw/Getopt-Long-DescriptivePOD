@@ -3,43 +3,47 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7 + 1;
+use Test::More tests => 8;
 use Test::NoWarnings;
 use Test::Exception;
 use Test::Differences;
 
 BEGIN {
-    use_ok('Getopt::Long::Descriptive');
-    use_ok('Getopt::Long::DescriptivePod');
+    use_ok 'Getopt::Long::Descriptive';
+    use_ok 'Getopt::Long::DescriptivePod';
 }
 
-my $content = <<'EOT';
+my $extra_space
+    = $Getopt::Long::Descriptive::VERSION >= 0.099
+    ? q{ }
+    : q{};
+
+my $content = <<"EOT";
 =head1 FOO
 foo
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
-        -v --verbose   print extra stuff
+        -v --verbose   ${extra_space}print extra stuff
 
-        --help         print usage message and exit
+        --help         ${extra_space}print usage message and exit
 
 =head1 BAR
 EOT
 
 my ($opt, $usage);
-lives_ok(
+lives_ok
     sub {
         ($opt, $usage) = describe_options(
             'my-program %o <some-arg>',
-            [ 'verbose|v',  'print extra stuff'            ],
+            [ 'verbose|v', 'print extra stuff'            ],
             [],
-            [ 'help',       'print usage message and exit' ],
+            [ 'help',      'print usage message and exit' ],
         );
     },
-    'describe_options',
-);
+    'describe_options';
 
-lives_ok(
+lives_ok
     sub {
         replace_pod({
             filename   => \$content,
@@ -49,23 +53,22 @@ lives_ok(
             on_verbose => sub {
                 my $message = shift;
                 $message =~ tr{\n}{ };
-                diag($message);
-                ok(1, $message);
+                note $message;
+                ok 1, $message;
             },
         });
     },
-    'replace_pod',
-);
+    'replace_pod';
 
-eq_or_diff($content, <<'EOT', 'usage in Pod');
+eq_or_diff $content, <<"EOT", 'usage in Pod';
 =head1 FOO
 foo
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
-        -v --verbose   print extra stuff
+        -v --verbose   ${extra_space}print extra stuff
 
-        --help         print usage message and exit
+        --help         ${extra_space}print usage message and exit
 
 =head1 BAR
 EOT

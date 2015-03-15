@@ -3,15 +3,15 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4 + 1;
+use Test::More tests => 5;
 use Test::NoWarnings;
 use Test::Exception;
 
 BEGIN {
-    use_ok('Getopt::Long::DescriptivePod');
+    use_ok 'Getopt::Long::DescriptivePod';
 }
 
-throws_ok(
+throws_ok
     sub {
         replace_pod({
             filename          => \q{},
@@ -21,10 +21,9 @@ throws_ok(
         });
     },
     qr{\A \QA Pod tag is not allowed in before_code_block at}xms,
-    'before',
-);
+    'before';
 
-throws_ok(
+throws_ok
     sub {
         replace_pod({
             filename   => \q{},
@@ -33,10 +32,9 @@ throws_ok(
         });
     },
     qr{\A \QA Pod tag is not allowed in code_block at}xms,
-    'code',
-);
+    'code';
 
-throws_ok(
+throws_ok
     sub {
         replace_pod({
             filename         => \q{},
@@ -46,5 +44,4 @@ throws_ok(
         });
     },
     qr{\A \QA Pod tag is not allowed in after_code_block at}xms,
-    'after',
-);
+    'after';

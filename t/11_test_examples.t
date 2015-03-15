@@ -9,11 +9,10 @@ use Carp qw(confess);
 use Cwd qw(getcwd chdir);
 use English qw(-no_match_vars $OS_ERROR $INPUT_RECORD_SEPARATOR);
 
-$ENV{AUTHOR_TESTING} or plan(
-    skip_all => 'Set $ENV{AUTHOR_TESTING} to run this test.'
-);
+$ENV{AUTHOR_TESTING} 
+    or plan skip_all => 'Set $ENV{AUTHOR_TESTING} to run this test.';
 
-plan( tests => 2 );
+plan tests => 2;
 
 my @data = (
     {
@@ -23,10 +22,10 @@ my @data = (
         params     => '-I../lib',
         cmd_result => <<'EOT',
 01_example.pl [-?hv] [long options...] <some-arg>
-    -v --verbose   Print extra stuff. And here I show, how to work with
-                   lots of lines as floating text.
+    -v --verbose    Print extra stuff. And here I show, how to work with
+                    lots of lines as floating text.
 
-    -? -h --help   Print usage message and exit.
+    -? -h --help    Print usage message and exit.
 EOT
         result     => <<'EOT',
     #!perl ## no critic (TidyCode)
@@ -46,7 +45,7 @@ EOT
 
     my ($opt, $usage) = describe_options(
         '01_example.pl %o <some-arg>',
-        [ 'verbose|v',  trim_lines( <<'EOT' ) ],
+        [ 'verbose|v', trim_lines( <<'EOT' ) ],
             Print extra stuff.
             And here I show, how to work
             with lots of lines as floating text.
@@ -93,10 +92,10 @@ EOT
     block with the usage inside.
 
         01_example.pl [-?hv] [long options...] <some-arg>
-            -v --verbose   Print extra stuff. And here I show, how to work with
-                           lots of lines as floating text.
+            -v --verbose    Print extra stuff. And here I show, how to work with
+                            lots of lines as floating text.
 
-            -? -h --help   Print usage message and exit.
+            -? -h --help    Print usage message and exit.
 
     This is floating text in Pod after that code
     block with the usage inside.
@@ -133,7 +132,7 @@ EOT
 for my $data (@data) {
     my $current_dir = getcwd();
     my $example_dir = "$current_dir/$data->{path}";
-    chdir($example_dir);
+    chdir $example_dir;
 
     local $INPUT_RECORD_SEPARATOR = ();
 
@@ -149,23 +148,21 @@ for my $data (@data) {
     my $new_content = <$file_handle>;
     () = close $file_handle;
 
-    eq_or_diff(
+    eq_or_diff
         do {
             $cmd_result =~ s{ \t }{ q{ } x 4 }xmsge;
             $cmd_result =~ s{ [ ]+ $ }{}xmsg;
             $cmd_result;
         },
         $data->{cmd_result},
-        "$data->{test} untabified and right trimmed cmd result",
-    );
-    eq_or_diff(
+        "$data->{test} untabified and right trimmed cmd result";
+    eq_or_diff
         $new_content,
         do {
             $data->{result} =~ s{^ [ ]{4} }{}xmsg;
             $data->{result};
         },
-        "$data->{test} content",
-    );
+        "$data->{test} content";
 
     open $file_handle, q{>}, $data->{filename}
         or confess "$data->{test} write $data->{filename} $OS_ERROR";
@@ -174,5 +171,5 @@ for my $data (@data) {
     close $file_handle
         or confess "$data->{test} write $data->{filename} $OS_ERROR";
 
-    chdir($current_dir);
+    chdir $current_dir;
 }

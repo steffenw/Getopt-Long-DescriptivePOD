@@ -15,7 +15,7 @@ const my $INDENT => 4;
 
 my ($opt, $usage) = describe_options(
     '01_example.pl %o <some-arg>',
-    [ 'verbose|v',  trim_lines( <<'EOT' ) ],
+    [ 'verbose|v', trim_lines( <<'EOT' ) ],
         Print extra stuff.
         And here I show, how to work
         with lots of lines as floating text.

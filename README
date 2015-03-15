@@ -1,4 +1,4 @@
-Getopt::Long::DescriptivePod version 0.02
+Getopt::Long::DescriptivePod version 0.03
 =========================================
 
 Getopt::Long::Descriptive is a excellent way
@@ -17,13 +17,6 @@ To install this module, run the following commands:
     make test
     make install
 
-Alternatively, to install with Module::Build, you can use the following commands:
-
-    perl Build.PL
-    ./Build
-    ./Build test
-    ./Build install
-
 DEPENDENCIES
 
 This module requires these other modules and libraries:
@@ -31,11 +24,11 @@ This module requires these other modules and libraries:
     Carp
     English
     Params::Validate
-    Perl6::Export::Attrs
+    Sub::Exporter
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2011 - 2012,
+Copyright (c) 2011 - 2015,
 Steffen Winkler
 steffenw at cpan.org.
 All rights reserved.

@@ -32,6 +32,7 @@
 \bBuild.COM$
 \bBUILD.COM$
 \bbuild.com$
+\bBuild.PL$
 
 # Avoid temp and backup files.
 ~$
