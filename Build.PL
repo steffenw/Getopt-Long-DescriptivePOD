@@ -10,7 +10,7 @@ Module::Build->new(
     dist_author       => 'Steffen Winkler <steffenw at cpan.org>',
     dist_version_from => 'lib/Getopt/Long/DescriptivePod.pm',
     requires          => {
-        perl               => 5.008, # open \$scalar, io-layer?
+        perl               => '5.008',
         Carp               => 0, # perl dist
         English            => 0, # perl dist
         'Params::Validate' => 0,
@@ -24,7 +24,6 @@ Module::Build->new(
         'Test::More'                => 0, # dist Test-Simple
     },
     recommends => {
-        # build
         'Test::Pod'           => '1.14',
         'Test::Pod::Coverage' => '1.04',
     },

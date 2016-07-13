@@ -1,11 +1,11 @@
-<SOFTPKG NAME="Getopt-Long-DescriptivePod" VERSION="0.03">
+<SOFTPKG NAME="Getopt-Long-DescriptivePod" VERSION="0.04">
     <ABSTRACT>Getopt::Long::DescriptivePod - write usage to Pod</ABSTRACT>
     <AUTHOR>Steffen Winkler &lt;steffenw at cpan.org&gt;</AUTHOR>
     <IMPLEMENTATION>
+        <REQUIRE NAME="Sub::Exporter" VERSION="0" />
         <REQUIRE NAME="English::" VERSION="0" />
         <REQUIRE NAME="Params::Validate" VERSION="0" />
-        <REQUIRE NAME="Sub::Exporter" VERSION="0" />
         <REQUIRE NAME="Carp::" VERSION="0" />
-        <CODEBASE HREF="PPM-Getopt-Long-DescriptivePod-0.03.tar.gz" />
+        <CODEBASE HREF="PPM-Getopt-Long-DescriptivePod-0.04.tar.gz" />
     </IMPLEMENTATION>
 </SOFTPKG>

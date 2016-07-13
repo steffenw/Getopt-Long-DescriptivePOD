@@ -14,9 +14,9 @@ BEGIN {
 }
 
 my $extra_space 
-    = $Getopt::Long::Descriptive::VERSION >= 0.099
-    ? q{ }
-    : q{};
+    = $Getopt::Long::Descriptive::VERSION >= 0.100 ? q{}
+    : $Getopt::Long::Descriptive::VERSION >= 0.099 ? q{  }
+    :                                                q{ };
 
 my $content = <<'EOT' . 'bla';
 =head1 FOO
@@ -60,9 +60,9 @@ foo
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
-        -v --verbose   ${extra_space}print extra stuff
+        -v --verbose  ${extra_space}print extra stuff
 
-        --help         ${extra_space}print usage message and exit
+        --help        ${extra_space}print usage message and exit
 
 =head1 BAR
 EOT

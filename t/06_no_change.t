@@ -13,10 +13,10 @@ BEGIN {
     use_ok 'Getopt::Long::DescriptivePod';
 }
 
-my $extra_space
-    = $Getopt::Long::Descriptive::VERSION >= 0.099
-    ? q{ }
-    : q{};
+my $extra_space 
+    = $Getopt::Long::Descriptive::VERSION >= 0.100 ? q{}
+    : $Getopt::Long::Descriptive::VERSION >= 0.099 ? q{  }
+    :                                                q{ };
 
 my $content = <<"EOT";
 =head1 FOO
@@ -24,9 +24,9 @@ foo
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
-        -v --verbose   ${extra_space}print extra stuff
+        -v --verbose  ${extra_space}print extra stuff
 
-        --help         ${extra_space}print usage message and exit
+        --help        ${extra_space}print usage message and exit
 
 =head1 BAR
 EOT
@@ -66,9 +66,9 @@ foo
 =head1 USAGE
 
     my-program [-v] [long options...] <some-arg>
-        -v --verbose   ${extra_space}print extra stuff
+        -v --verbose  ${extra_space}print extra stuff
 
-        --help         ${extra_space}print usage message and exit
+        --help        ${extra_space}print usage message and exit
 
 =head1 BAR
 EOT

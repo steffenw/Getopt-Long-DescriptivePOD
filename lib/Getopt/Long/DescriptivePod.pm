@@ -3,7 +3,7 @@ package Getopt::Long::DescriptivePod; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use Carp qw(confess);
 use English qw(-no_match_vars $PROGRAM_NAME $OS_ERROR $INPUT_RECORD_SEPARATOR);
@@ -226,7 +226,7 @@ Getopt::Long::DescriptivePod - write usage to Pod
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 SYNOPSIS
 
@@ -387,7 +387,7 @@ Steffen Winkler
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2011 - 2015,
+Copyright (c) 2011 - 2016,
 Steffen Winkler
 C<< <steffenw at cpan.org> >>.
 All rights reserved.

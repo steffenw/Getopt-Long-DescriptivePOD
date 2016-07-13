@@ -7,7 +7,7 @@ use Test::More;
 use Test::Differences;
 use Carp qw(confess);
 use Cwd qw(getcwd chdir);
-use English qw(-no_match_vars $OS_ERROR $INPUT_RECORD_SEPARATOR);
+use English qw(-no_match_vars $OS_ERROR $INPUT_RECORD_SEPARATOR $CHILD_ERROR);
 
 $ENV{AUTHOR_TESTING} 
     or plan skip_all => 'Set $ENV{AUTHOR_TESTING} to run this test.';
@@ -22,10 +22,10 @@ my @data = (
         params     => '-I../lib',
         cmd_result => <<'EOT',
 01_example.pl [-?hv] [long options...] <some-arg>
-    -v --verbose    Print extra stuff. And here I show, how to work with
-                    lots of lines as floating text.
+    -v --verbose  Print extra stuff. And here I show, how to work with
+                  lots of lines as floating text.
 
-    -? -h --help    Print usage message and exit.
+    -? -h --help  Print usage message and exit.
 EOT
         result     => <<'EOT',
     #!perl ## no critic (TidyCode)
@@ -92,10 +92,10 @@ EOT
     block with the usage inside.
 
         01_example.pl [-?hv] [long options...] <some-arg>
-            -v --verbose    Print extra stuff. And here I show, how to work with
-                            lots of lines as floating text.
+            -v --verbose  Print extra stuff. And here I show, how to work with
+                          lots of lines as floating text.
 
-            -? -h --help    Print usage message and exit.
+            -? -h --help  Print usage message and exit.
 
     This is floating text in Pod after that code
     block with the usage inside.
@@ -141,7 +141,9 @@ for my $data (@data) {
     my $old_content = <$file_handle>;
     () = close $file_handle;
 
-    my $cmd_result = qx{perl $data->{params} $data->{filename} --help 2>&3};
+    my $cmd_result = qx{perl $data->{params} $data->{filename} --help 2>&1};
+    $CHILD_ERROR
+        and die "Couldn't run $data->{filename} (status $CHILD_ERROR)";
 
     open $file_handle, q{<}, $data->{filename}
         or confess "$data->{test} read $data->{filename} $OS_ERROR";
